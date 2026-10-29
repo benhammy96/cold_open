@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     # Rate limiting (R51): max answer submissions per run per window.
     rate_limit_per_minute: int = 60
 
+    # Content strictness. The §4 rule requires >= 40 answers per prompt, but the
+    # keyless FIXTURE catalog is too small to satisfy that. When running on
+    # fixtures we relax the hard minimum to this value so authored prompts are
+    # still playable; once a TMDB key is set and the real catalog is ingested,
+    # set COLDOPEN_STRICT_CONTENT=true to enforce the full >= 40 rule.
+    strict_content: bool = False
+    min_answers_fixture: int = 6
+
     @property
     def tz(self) -> ZoneInfo:
         return ZoneInfo(self.daily_timezone)

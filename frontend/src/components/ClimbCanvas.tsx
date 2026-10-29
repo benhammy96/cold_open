@@ -5,6 +5,7 @@ import { ClimbRenderer, IH, IW } from "../game/renderer";
 export interface ClimbHandle {
   playScore: (points: number, tier: number) => void;
   setReducedMotion: (v: boolean) => void;
+  setScoreInstant: (score: number) => void;
 }
 
 interface Props {
@@ -24,6 +25,7 @@ export const ClimbCanvas = forwardRef<ClimbHandle, Props>(function ClimbCanvas(
   useImperativeHandle(ref, () => ({
     playScore: (points, tier) => rendererRef.current?.playScore(points, tier),
     setReducedMotion: (v) => rendererRef.current?.setReducedMotion(v),
+    setScoreInstant: (score) => rendererRef.current?.setScoreInstant(score),
   }));
 
   useEffect(() => {

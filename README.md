@@ -21,11 +21,36 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m app.seed          # create + seed cold_open.db
+python -m app.seed          # ingest entities + resolve the prompt corpus -> cold_open.db
 uvicorn app.main:app --reload --port 8000
 ```
 
 API now at http://localhost:8000 (docs at /docs).
+
+### Content pipeline
+
+Seeding runs the full pipeline: ingest entities (TMDB or fixtures) -> load
+`content/prompts.yaml` -> resolve each prompt to entities + prior shares ->
+validate -> publish -> build a rotating daily schedule.
+
+```bash
+# Ingest only (TMDB if a key is set, else keyless fixtures):
+python -m app.tmdb                       # add --movie-pages / --tv-pages for more
+
+# Validate the prompt corpus (CI-friendly exit code):
+python -m app.prompts validate content/prompts.yaml --resolve
+```
+
+Prompts come in two kinds (`content/prompts.yaml`): **query** (genre/year/vote
+filters, scale automatically on real data) and **curated** (hand-reviewed title
+lists for director/award/premise categories).
+
+**TMDB key:** set `TMDB_API_KEY` (v3) or `TMDB_READ_TOKEN` (v4 bearer) in the
+environment, then re-seed. Without a key the pipeline uses a ~90-title fixture
+catalog, so genre/era prompts with too few fixture answers are skipped (they
+publish automatically once real data is ingested). Set
+`COLDOPEN_STRICT_CONTENT=true` on real data to enforce the §4 rule of >= 40
+answers per prompt.
 
 Run the tests:
 

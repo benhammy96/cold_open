@@ -75,6 +75,14 @@ export class ClimbRenderer {
     this.maxScore = m;
   }
 
+  // Snap the climb to a score with no animation. Used to hydrate a resumed run
+  // so the character starts at the height already earned (R7).
+  setScoreInstant(score: number) {
+    const s = Math.max(0, Math.min(this.maxScore, score));
+    this.score = s;
+    this.targetScore = s;
+  }
+
   // Animate a scored answer: ease the world up by the points earned (R32) and
   // trigger the tier effect (R35). points<=0 => stumble + CUT, no climb.
   playScore(points: number, tier: number, now = performance.now()) {

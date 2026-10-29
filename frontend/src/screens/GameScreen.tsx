@@ -105,6 +105,28 @@ export function GameScreen({
     rememberRun(daily.date, run.run_id, run.run_token);
   }, [daily.date, run]);
 
+  // On a resumed run (starting past prompt 0), hydrate the HUD score and snap
+  // the climb to the height already earned so the character doesn't start over.
+  useEffect(() => {
+    if (run.current_index <= 0) return;
+    let cancelled = false;
+    api
+      .result(run.run_id, run.run_token)
+      .then((res) => {
+        if (cancelled) return;
+        setScore(res.total_score);
+        climbRef.current?.setScoreInstant(res.total_score);
+      })
+      .catch(() => {
+        /* best-effort hydration; gameplay continues regardless */
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Run once on mount for a resumed run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     inputRef.current?.focus();
   }, [index]);

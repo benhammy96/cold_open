@@ -1,0 +1,841 @@
+# Cold Open launch prompt corpus (Task 5).
+#
+# Two kinds (see app/prompts/schema.py):
+#   query   - answers derived from TMDB-style filters (genre/year/votes). These
+#             scale automatically once the real TMDB catalog is ingested.
+#   curated - an explicit, hand-reviewed title list for categories TMDB can't
+#             filter directly (director, award, premise). `query` prompts may
+#             also carry `titles:` to seed/augment a set.
+#
+# Genre ids follow TMDB's scheme (movie + tv). Validate with:
+#   python -m app.prompts validate content/prompts.yaml --resolve
+#
+# NOTE: on the keyless FIXTURE catalog many sets are small; the >= 40 rule is
+# relaxed in fixture mode (COLDOPEN_STRICT_CONTENT=false). With a real key the
+# genre/year queries fill out to hundreds of answers.
+
+prompts:
+  # ---------------- Movies: genre queries ----------------
+  - id: horror-movies
+    text: "Name a horror movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [horror, genre]
+    query: { genres_any: [27], min_vote_count: 50, limit: 300 }
+
+  - id: scifi-movies
+    text: "Name a science fiction movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [scifi, genre]
+    query: { genres_any: [878], min_vote_count: 50, limit: 300 }
+
+  - id: animated-movies
+    text: "Name an animated movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [animation, genre]
+    query: { genres_any: [16], min_vote_count: 50, limit: 300 }
+
+  - id: crime-movies
+    text: "Name a crime movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [crime, genre]
+    query: { genres_any: [80], min_vote_count: 50, limit: 300 }
+
+  - id: comedy-movies
+    text: "Name a comedy movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [comedy, genre]
+    query: { genres_any: [35], min_vote_count: 50, limit: 300 }
+
+  - id: action-movies
+    text: "Name an action movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [action, genre]
+    query: { genres_any: [28], min_vote_count: 50, limit: 300 }
+
+  - id: thriller-movies
+    text: "Name a thriller movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [thriller, genre]
+    query: { genres_any: [53], min_vote_count: 50, limit: 300 }
+
+  - id: fantasy-movies
+    text: "Name a fantasy movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [fantasy, genre]
+    query: { genres_any: [14], min_vote_count: 50, limit: 300 }
+
+  - id: adventure-movies
+    text: "Name an adventure movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [adventure, genre]
+    query: { genres_any: [12], min_vote_count: 50, limit: 300 }
+
+  - id: romance-movies
+    text: "Name a romance movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [romance, genre]
+    query: { genres_any: [10749], min_vote_count: 50, limit: 300 }
+
+  - id: war-movies
+    text: "Name a war movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [war, genre]
+    query: { genres_any: [10752], min_vote_count: 50, limit: 300 }
+
+  - id: western-movies
+    text: "Name a western movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [western, genre]
+    query: { genres_any: [37], min_vote_count: 50, limit: 300 }
+
+  - id: mystery-movies
+    text: "Name a mystery movie"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [mystery, genre]
+    query: { genres_any: [9648], min_vote_count: 50, limit: 300 }
+
+  - id: music-movies
+    text: "Name a movie about music or musicians"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [music, genre]
+    query: { genres_any: [10402], min_vote_count: 50, limit: 300 }
+
+  # ---------------- Movies: genre + era combos ----------------
+  - id: scifi-2010s
+    text: "Name a science fiction movie released in the 2010s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [scifi, era]
+    query: { genres_any: [878], year_min: 2010, year_max: 2019, min_vote_count: 50, limit: 300 }
+
+  - id: horror-2000s
+    text: "Name a horror movie released in the 2000s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [horror, era]
+    query: { genres_any: [27], year_min: 2000, year_max: 2009, min_vote_count: 20, limit: 300 }
+
+  - id: comedy-1990s
+    text: "Name a comedy movie from the 1990s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [comedy, era]
+    query: { genres_any: [35], year_min: 1990, year_max: 1999, min_vote_count: 20, limit: 300 }
+
+  - id: action-1980s
+    text: "Name an action movie from the 1980s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [action, era]
+    query: { genres_any: [28], year_min: 1980, year_max: 1989, min_vote_count: 20, limit: 300 }
+
+  - id: animated-21st-century
+    text: "Name an animated movie released since 2000"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [animation, era]
+    query: { genres_any: [16], year_min: 2000, min_vote_count: 50, limit: 300 }
+
+  - id: crime-classics
+    text: "Name a crime movie released before 2000"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [crime, era]
+    query: { genres_any: [80], year_max: 1999, min_vote_count: 50, limit: 300 }
+
+  # ---------------- Movies: era only ----------------
+  - id: movies-1970s
+    text: "Name a movie released in the 1970s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [era]
+    query: { year_min: 1970, year_max: 1979, min_vote_count: 100, limit: 400 }
+
+  - id: movies-1980s
+    text: "Name a movie released in the 1980s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [era]
+    query: { year_min: 1980, year_max: 1989, min_vote_count: 100, limit: 400 }
+
+  - id: movies-1990s
+    text: "Name a movie released in the 1990s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [era]
+    query: { year_min: 1990, year_max: 1999, min_vote_count: 100, limit: 400 }
+
+  - id: movies-2000s
+    text: "Name a movie released in the 2000s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [era]
+    query: { year_min: 2000, year_max: 2009, min_vote_count: 100, limit: 400 }
+
+  - id: movies-2010s
+    text: "Name a movie released in the 2010s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [era]
+    query: { year_min: 2010, year_max: 2019, min_vote_count: 100, limit: 400 }
+
+  - id: movies-2020s
+    text: "Name a movie released in the 2020s"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [era]
+    query: { year_min: 2020, min_vote_count: 50, limit: 400 }
+
+  # ---------------- TV: genre queries ----------------
+  - id: comedy-shows
+    text: "Name a TV comedy"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [comedy, tv]
+    query: { genres_any: [35], min_vote_count: 20, limit: 300 }
+
+  - id: drama-shows
+    text: "Name a TV drama"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [drama, tv]
+    query: { genres_any: [18], min_vote_count: 20, limit: 300 }
+
+  - id: crime-shows
+    text: "Name a crime TV show"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [crime, tv]
+    query: { genres_any: [80], min_vote_count: 20, limit: 300 }
+
+  - id: scifi-fantasy-shows
+    text: "Name a sci-fi or fantasy TV show"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [scifi, fantasy, tv]
+    query: { genres_any: [10765], min_vote_count: 20, limit: 300 }
+
+  - id: animated-shows
+    text: "Name an animated TV show"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [animation, tv]
+    query: { genres_any: [16], min_vote_count: 20, limit: 300 }
+
+  - id: mystery-shows
+    text: "Name a mystery TV show"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [mystery, tv]
+    query: { genres_any: [9648], min_vote_count: 20, limit: 300 }
+
+  - id: action-adventure-shows
+    text: "Name an action or adventure TV show"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [action, tv]
+    query: { genres_any: [10759], min_vote_count: 20, limit: 300 }
+
+  # ---------------- TV: era combos ----------------
+  - id: shows-since-2015
+    text: "Name a TV show that premiered in 2015 or later"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [era, tv]
+    query: { year_min: 2015, min_vote_count: 20, limit: 400 }
+
+  - id: shows-before-2000
+    text: "Name a TV show that premiered before 2000"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [era, tv]
+    query: { year_max: 1999, min_vote_count: 10, limit: 400 }
+
+  - id: sitcoms-2000s
+    text: "Name a TV comedy that premiered in the 2000s"
+    kind: query
+    accepted_entity_types: [show]
+    tags: [comedy, era, tv]
+    query: { genres_any: [35], year_min: 2000, year_max: 2009, min_vote_count: 10, limit: 300 }
+
+  # ---------------- Movies or TV (mixed type, Q1) ----------------
+  - id: anything-space
+    text: "Name a movie or show about space travel"
+    kind: query
+    accepted_entity_types: [movie, show]
+    tags: [scifi, mixed]
+    query: { genres_any: [878, 10765], min_vote_count: 50, limit: 400 }
+
+  - id: anything-crime
+    text: "Name a movie or show about crime"
+    kind: query
+    accepted_entity_types: [movie, show]
+    tags: [crime, mixed]
+    query: { genres_any: [80], min_vote_count: 20, limit: 400 }
+
+  - id: anything-animated
+    text: "Name any animated movie or show"
+    kind: query
+    accepted_entity_types: [movie, show]
+    tags: [animation, mixed]
+    query: { genres_any: [16], min_vote_count: 20, limit: 400 }
+
+  - id: anything-fantasy
+    text: "Name a fantasy or sci-fi movie or show"
+    kind: query
+    accepted_entity_types: [movie, show]
+    tags: [fantasy, mixed]
+    query: { genres_any: [14, 878, 10765], min_vote_count: 50, limit: 400 }
+
+  # ---------------- Curated: directors (TMDB can't filter by director in discover basic) ----------------
+  - id: nolan-films
+    text: "Name a film directed by Christopher Nolan"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [director]
+    answers:
+      - Following
+      - Memento
+      - Insomnia
+      - Batman Begins
+      - The Prestige
+      - The Dark Knight
+      - Inception
+      - The Dark Knight Rises
+      - Interstellar
+      - Dunkirk
+      - Tenet
+      - Oppenheimer
+
+  - id: tarantino-films
+    text: "Name a film directed by Quentin Tarantino"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [director]
+    answers:
+      - Reservoir Dogs
+      - Pulp Fiction
+      - Jackie Brown
+      - Kill Bill: Vol. 1
+      - Kill Bill: Vol. 2
+      - Death Proof
+      - Inglourious Basterds
+      - Django Unchained
+      - The Hateful Eight
+      - Once Upon a Time in Hollywood
+
+  - id: spielberg-films
+    text: "Name a film directed by Steven Spielberg"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [director]
+    answers:
+      - Jaws
+      - Close Encounters of the Third Kind
+      - Raiders of the Lost Ark
+      - E.T. the Extra-Terrestrial
+      - Jurassic Park
+      - Schindler's List
+      - Saving Private Ryan
+      - Minority Report
+      - Catch Me If You Can
+      - War of the Worlds
+      - Lincoln
+      - Ready Player One
+      - The Fabelmans
+
+  - id: scorsese-films
+    text: "Name a film directed by Martin Scorsese"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [director]
+    answers:
+      - Taxi Driver
+      - Raging Bull
+      - GoodFellas
+      - Casino
+      - Gangs of New York
+      - The Aviator
+      - The Departed
+      - Shutter Island
+      - The Wolf of Wall Street
+      - The Irishman
+      - Killers of the Flower Moon
+
+  # ---------------- Curated: awards ----------------
+  - id: best-picture-winners
+    text: "Name a movie that won the Best Picture Oscar"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [oscars, award]
+    answers:
+      - The Godfather
+      - Rocky
+      - Titanic
+      - Gladiator
+      - Chicago
+      - The Lord of the Rings: The Return of the King
+      - Million Dollar Baby
+      - The Departed
+      - No Country for Old Men
+      - Slumdog Millionaire
+      - The Hurt Locker
+      - The King's Speech
+      - Argo
+      - 12 Years a Slave
+      - Birdman
+      - Spotlight
+      - Moonlight
+      - The Shape of Water
+      - Green Book
+      - Parasite
+      - Nomadland
+      - CODA
+      - Everything Everywhere All at Once
+      - Oppenheimer
+      - Forrest Gump
+      - Schindler's List
+
+  # ---------------- Curated: franchises ----------------
+  - id: mcu-films
+    text: "Name a movie in the Marvel Cinematic Universe"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [franchise, marvel]
+    answers:
+      - Iron Man
+      - The Incredible Hulk
+      - Thor
+      - Captain America: The First Avenger
+      - The Avengers
+      - Guardians of the Galaxy
+      - Avengers: Age of Ultron
+      - Doctor Strange
+      - Black Panther
+      - Avengers: Infinity War
+      - Captain Marvel
+      - Avengers: Endgame
+      - Spider-Man: Far From Home
+      - Shang-Chi and the Legend of the Ten Rings
+      - Eternals
+      - Spider-Man: No Way Home
+
+  - id: star-wars-films
+    text: "Name a Star Wars movie"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [franchise, starwars]
+    answers:
+      - Star Wars
+      - The Empire Strikes Back
+      - Return of the Jedi
+      - "Star Wars: Episode I - The Phantom Menace"
+      - "Star Wars: Episode II - Attack of the Clones"
+      - "Star Wars: Episode III - Revenge of the Sith"
+      - Star Wars: The Force Awakens
+      - Rogue One: A Star Wars Story
+      - Star Wars: The Last Jedi
+      - Solo: A Star Wars Story
+      - Star Wars: The Rise of Skywalker
+
+  - id: pixar-films
+    text: "Name a Pixar movie"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [franchise, pixar]
+    answers:
+      - Toy Story
+      - A Bug's Life
+      - Toy Story 2
+      - Monsters, Inc.
+      - Finding Nemo
+      - The Incredibles
+      - Cars
+      - Ratatouille
+      - WALL·E
+      - Up
+      - Toy Story 3
+      - Brave
+      - Inside Out
+      - Coco
+      - Soul
+      - Luca
+      - Turning Red
+
+  - id: lotr-and-hobbit
+    text: "Name a film in the Lord of the Rings or Hobbit series"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [franchise, fantasy]
+    answers:
+      - The Lord of the Rings: The Fellowship of the Ring
+      - The Lord of the Rings: The Two Towers
+      - The Lord of the Rings: The Return of the King
+      - The Hobbit: An Unexpected Journey
+      - The Hobbit: The Desolation of Smaug
+      - The Hobbit: The Battle of the Five Armies
+
+  # ---------------- Curated: premise ----------------
+  - id: heist-movies
+    text: "Name a heist movie"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [premise, crime]
+    answers:
+      - Ocean's Eleven
+      - Heat
+      - The Italian Job
+      - Inception
+      - Baby Driver
+      - Reservoir Dogs
+      - Inside Man
+      - The Town
+      - Dog Day Afternoon
+      - Logan Lucky
+      - Widows
+      - Now You See Me
+      - Den of Thieves
+      - The Usual Suspects
+
+  - id: time-travel-movies
+    text: "Name a movie that features time travel"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [premise, scifi]
+    answers:
+      - Back to the Future
+      - Back to the Future Part II
+      - The Terminator
+      - Terminator 2: Judgment Day
+      - Groundhog Day
+      - 12 Monkeys
+      - Donnie Darko
+      - Primer
+      - Looper
+      - Edge of Tomorrow
+      - Interstellar
+      - Avengers: Endgame
+      - Tenet
+
+  - id: zombie-movies
+    text: "Name a zombie movie"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [premise, horror]
+    answers:
+      - Night of the Living Dead
+      - Dawn of the Dead
+      - 28 Days Later
+      - Shaun of the Dead
+      - Zombieland
+      - World War Z
+      - Train to Busan
+      - Dawn of the Dead
+      - Resident Evil
+      - I Am Legend
+
+  - id: superhero-movies
+    text: "Name a superhero movie"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [premise, action]
+    answers:
+      - Superman
+      - Batman
+      - Spider-Man
+      - The Dark Knight
+      - Iron Man
+      - The Avengers
+      - Wonder Woman
+      - Black Panther
+      - Logan
+      - Deadpool
+      - Guardians of the Galaxy
+      - Joker
+      - The Batman
+      - Man of Steel
+      - Captain America: The Winter Soldier
+      - Spider-Man: Into the Spider-Verse
+
+  # ---------------- Curated: people (actors) ----------------
+  - id: tom-hanks-films
+    text: "Name a movie starring Tom Hanks"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [actor]
+    answers:
+      - Big
+      - A League of Their Own
+      - Philadelphia
+      - Forrest Gump
+      - Apollo 13
+      - Toy Story
+      - Saving Private Ryan
+      - The Green Mile
+      - Cast Away
+      - Road to Perdition
+      - Catch Me If You Can
+      - The Terminal
+      - The Da Vinci Code
+      - Captain Phillips
+      - Bridge of Spies
+      - Sully
+
+  - id: leonardo-dicaprio-films
+    text: "Name a movie starring Leonardo DiCaprio"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [actor]
+    answers:
+      - Titanic
+      - Catch Me If You Can
+      - Gangs of New York
+      - The Aviator
+      - The Departed
+      - Blood Diamond
+      - Shutter Island
+      - Inception
+      - Django Unchained
+      - The Wolf of Wall Street
+      - The Revenant
+      - Once Upon a Time in Hollywood
+      - Killers of the Flower Moon
+
+  - id: meryl-streep-films
+    text: "Name a movie starring Meryl Streep"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [actor]
+    answers:
+      - Kramer vs. Kramer
+      - Sophie's Choice
+      - Out of Africa
+      - The Bridges of Madison County
+      - The Devil Wears Prada
+      - Doubt
+      - Julie & Julia
+      - The Iron Lady
+      - Into the Woods
+      - Florence Foster Jenkins
+      - The Post
+      - Little Women
+
+  # ---------------- Curated: TV premise ----------------
+  - id: shows-set-in-hospital
+    text: "Name a TV show set in a hospital"
+    kind: curated
+    accepted_entity_types: [show]
+    tags: [premise, tv]
+    answers:
+      - ER
+      - Grey's Anatomy
+      - House
+      - Scrubs
+      - The Good Doctor
+      - Chicago Med
+      - Nurse Jackie
+      - New Amsterdam
+      - Casualty
+      - Call the Midwife
+
+  - id: workplace-sitcoms
+    text: "Name a workplace sitcom"
+    kind: curated
+    accepted_entity_types: [show]
+    tags: [premise, comedy, tv]
+    answers:
+      - The Office
+      - Parks and Recreation
+      - 30 Rock
+      - Brooklyn Nine-Nine
+      - Superstore
+      - Cheers
+      - Scrubs
+      - It's Always Sunny in Philadelphia
+      - Veep
+      - Silicon Valley
+
+  - id: animated-sitcoms
+    text: "Name an animated sitcom"
+    kind: curated
+    accepted_entity_types: [show]
+    tags: [premise, animation, tv]
+    answers:
+      - The Simpsons
+      - Family Guy
+      - Futurama
+      - South Park
+      - Bob's Burgers
+      - American Dad!
+      - King of the Hill
+      - Rick and Morty
+      - Archer
+      - BoJack Horseman
+
+  - id: prestige-dramas
+    text: "Name a prestige drama TV series"
+    kind: curated
+    accepted_entity_types: [show]
+    tags: [premise, drama, tv]
+    answers:
+      - The Sopranos
+      - The Wire
+      - Breaking Bad
+      - Mad Men
+      - Game of Thrones
+      - Better Call Saul
+      - The Crown
+      - Succession
+      - True Detective
+      - Westworld
+      - Boardwalk Empire
+      - Deadwood
+
+  # ---------------- Curated: more premise ----------------
+  - id: based-on-video-games
+    text: "Name a movie or show based on a video game"
+    kind: curated
+    accepted_entity_types: [movie, show]
+    tags: [premise, adaptation]
+    answers:
+      - Resident Evil
+      - Tomb Raider
+      - Mortal Kombat
+      - Sonic the Hedgehog
+      - Detective Pikachu
+      - Warcraft
+      - Uncharted
+      - The Last of Us
+      - Arcane
+      - Werewolves Within
+      - Rampage
+      - Assassin's Creed
+
+  - id: courtroom-dramas
+    text: "Name a courtroom or legal drama"
+    kind: curated
+    accepted_entity_types: [movie, show]
+    tags: [premise, legal]
+    answers:
+      - 12 Angry Men
+      - A Few Good Men
+      - My Cousin Vinny
+      - The Lincoln Lawyer
+      - Erin Brockovich
+      - A Time to Kill
+      - Philadelphia
+      - The Firm
+      - Suits
+      - Better Call Saul
+      - How to Get Away with Murder
+      - The Good Wife
+
+  - id: disaster-movies
+    text: "Name a disaster movie"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [premise]
+    answers:
+      - Titanic
+      - Twister
+      - Armageddon
+      - Deep Impact
+      - The Day After Tomorrow
+      - 2012
+      - San Andreas
+      - The Towering Inferno
+      - Dante's Peak
+      - Contagion
+      - Greenland
+      - Geostorm
+
+  - id: spy-movies
+    text: "Name a spy movie"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [premise, action]
+    answers:
+      - Goldfinger
+      - Casino Royale
+      - Skyfall
+      - The Bourne Identity
+      - Mission: Impossible
+      - Tinker Tailor Soldier Spy
+      - Kingsman: The Secret Service
+      - Spy
+      - Atomic Blonde
+      - Bridge of Spies
+      - Munich
+      - Salt
+
+  - id: sports-movies
+    text: "Name a sports movie"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [premise]
+    answers:
+      - Rocky
+      - Raging Bull
+      - Field of Dreams
+      - A League of Their Own
+      - Remember the Titans
+      - Moneyball
+      - The Blind Side
+      - Creed
+      - Rudy
+      - Space Jam
+      - Million Dollar Baby
+      - Coach Carter
+      - Friday Night Lights
+
+  - id: musical-movies
+    text: "Name a movie musical"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [premise, music]
+    answers:
+      - Singin' in the Rain
+      - The Sound of Music
+      - Grease
+      - Chicago
+      - Moulin Rouge!
+      - Mamma Mia!
+      - Les Misérables
+      - La La Land
+      - The Greatest Showman
+      - A Star Is Born
+      - West Side Story
+      - Hairspray
+
+  - id: post-apocalyptic
+    text: "Name a post-apocalyptic movie"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [premise, scifi]
+    answers:
+      - Mad Max
+      - The Road
+      - Children of Men
+      - I Am Legend
+      - Snowpiercer
+      - WALL·E
+      - Mad Max: Fury Road
+      - A Quiet Place
+      - The Book of Eli
+      - 28 Days Later
+      - The Matrix
+      - Terminator 2: Judgment Day

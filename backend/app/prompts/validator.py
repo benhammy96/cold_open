@@ -83,11 +83,14 @@ def _check_wording(prompt: PromptDef, res: ValidationResult) -> None:
 
 
 def _check_answer_set(
-    prompt: PromptDef, answers: list[tuple[str, float]], res: ValidationResult
+    prompt: PromptDef,
+    answers: list[tuple[str, float]],
+    res: ValidationResult,
+    min_answers: int,
 ) -> None:
     n = len(answers)
-    if n < MIN_ANSWERS:
-        res.errors.append(f"only {n} valid answers; need at least {MIN_ANSWERS}")
+    if n < min_answers:
+        res.errors.append(f"only {n} valid answers; need at least {min_answers}")
     elif n < TARGET_ANSWERS:
         res.warnings.append(f"{n} valid answers; target is {TARGET_ANSWERS}+")
 
@@ -118,13 +121,21 @@ def _check_answer_set(
         res.errors.append("duplicate titles in the answer set")
 
 
-def validate_prompt(prompt: PromptDef, answers: list[tuple[str, float]]) -> ValidationResult:
-    """Validate one prompt against its resolved (title, prior_share) answer set."""
+def validate_prompt(
+    prompt: PromptDef,
+    answers: list[tuple[str, float]],
+    min_answers: int = MIN_ANSWERS,
+) -> ValidationResult:
+    """Validate one prompt against its resolved (title, prior_share) answer set.
+
+    min_answers defaults to the §4 hard rule (40). Callers running on the small
+    fixture catalog may lower it; production should keep the default.
+    """
     res = ValidationResult(prompt_id=prompt.id)
     if not prompt.text.strip():
         res.errors.append("empty prompt text")
     _check_wording(prompt, res)
-    _check_answer_set(prompt, answers, res)
+    _check_answer_set(prompt, answers, res, min_answers)
     return res
 
 
