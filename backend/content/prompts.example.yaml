@@ -1,0 +1,25 @@
+# Example prompts file demonstrating both kinds. Validate with:
+#   python -m app.prompts validate content/prompts.example.yaml
+# The full launch corpus is authored in Task 5 (prompts.yaml).
+prompts:
+  - id: best-picture-winners
+    text: "Name a movie that won the Best Picture Oscar"
+    kind: curated
+    accepted_entity_types: [movie]
+    tags: [oscars, film]
+    answers:
+      - Titanic
+      - Parasite
+      - Gladiator
+      - The Godfather
+      - Forrest Gump
+
+  - id: nolan-films
+    text: "Name a film directed by Christopher Nolan"
+    kind: query
+    accepted_entity_types: [movie]
+    tags: [directors]
+    query:
+      titles: [Inception, Interstellar, "The Dark Knight", Oppenheimer]
+      min_vote_count: 200
+      limit: 120

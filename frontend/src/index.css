@@ -1,0 +1,109 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #000;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Disable image smoothing globally for pixel art (R37). */
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Respect reduced motion for CSS transitions too (R36). */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* --- Desktop "theater" backdrop ---
+   A layered marquee ambiance behind the phone column so wide screens feel
+   intentional instead of a mobile app on a black void. Pure CSS, no assets. */
+.theater-bg {
+  background-color: #080d16;
+  background-image:
+    radial-gradient(
+      120% 80% at 50% -10%,
+      rgba(255, 204, 51, 0.16) 0%,
+      rgba(255, 204, 51, 0.05) 28%,
+      rgba(13, 27, 42, 0) 60%
+    ),
+    radial-gradient(
+      90% 60% at 50% 120%,
+      rgba(193, 18, 31, 0.18) 0%,
+      rgba(13, 27, 42, 0) 55%
+    ),
+    linear-gradient(180deg, #0b1320 0%, #080d16 100%);
+}
+
+/* Soft spotlight sweep that slowly drifts; disabled under reduced motion. */
+.theater-spot {
+  background: radial-gradient(
+    40% 55% at 50% 10%,
+    rgba(255, 245, 214, 0.1),
+    rgba(255, 245, 214, 0) 70%
+  );
+  animation: spot-drift 16s ease-in-out infinite alternate;
+}
+@keyframes spot-drift {
+  from {
+    transform: translateX(-6%);
+  }
+  to {
+    transform: translateX(6%);
+  }
+}
+
+/* Film-strip edge: vertical band of sprocket holes framing the phone column. */
+.film-strip {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 10px,
+      rgba(0, 0, 0, 0.55) 10px 22px
+    );
+  position: relative;
+}
+.film-strip::before,
+.film-strip::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #e0e1dd 0 8px,
+    transparent 8px 24px
+  );
+  opacity: 0.85;
+}
+.film-strip::before {
+  left: 5px;
+}
+.film-strip::after {
+  right: 5px;
+}
