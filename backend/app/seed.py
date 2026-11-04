@@ -158,11 +158,39 @@ def _build_schedule(db, prompt_ids: list[str]) -> None:
         )
 
 
+def seed_if_empty(prompts_path: str = DEFAULT_PROMPTS) -> bool:
+    """Idempotent bootstrap for deploys: seed only when the DB has no puzzles.
+
+    Safe to run on every boot — it never drops data if content already exists.
+    Returns True if seeding happened. Creates tables first so a fresh managed
+    Postgres comes up populated.
+    """
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        existing = db.query(Puzzle).first()
+        if existing is not None:
+            return False
+    finally:
+        db.close()
+    seed(prompts_path)
+    return True
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed Cold Open content.")
     parser.add_argument("--prompts", default=DEFAULT_PROMPTS)
+    parser.add_argument(
+        "--if-empty",
+        action="store_true",
+        help="Only seed when the DB has no puzzles (safe for deploy boot).",
+    )
     args = parser.parse_args()
-    seed(args.prompts)
+    if args.if_empty:
+        did = seed_if_empty(args.prompts)
+        print("Seeded." if did else "Content already present; skipped.")
+    else:
+        seed(args.prompts)
 
 
 if __name__ == "__main__":

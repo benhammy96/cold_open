@@ -1,0 +1,61 @@
+# Render blueprint for Cold Open.
+# Connect this repo as a Blueprint in the Render dashboard to create all three
+# resources: managed Postgres, the FastAPI API, and the static frontend.
+#
+# Two cross-origin URLs can't be auto-wired because a service's PUBLIC url isn't
+# known until it exists (Render's fromService `host`/`hostport` are PRIVATE-network
+# only, unreachable from a browser). So they use `sync: false` and you set them in
+# the dashboard right after the first deploy:
+#   - cold-open-web  -> VITE_API_BASE          = https://<api-service>.onrender.com
+#   - cold-open-api  -> COLDOPEN_CORS_ORIGINS  = https://<web-service>.onrender.com
+# After setting them, trigger one redeploy of each service. (First boot the API
+# seeds from keyless fixtures; Task 8 adds the TMDB key + reseed.)
+
+databases:
+  - name: cold-open-db
+    plan: free
+    databaseName: cold_open
+    user: cold_open
+
+services:
+  # ---- Backend API (FastAPI) ----
+  - type: web
+    name: cold-open-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # Idempotent: seeds only if the DB has no puzzles, so redeploys never wipe data.
+    preDeployCommand: python -m app.seed --if-empty
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cold-open-db
+          property: connectionString
+      # Signed per-run tokens (R50). Render generates this once and keeps it stable.
+      - key: COLDOPEN_TOKEN_SECRET
+        generateValue: true
+      # Set to the static site's public URL after first deploy (see header).
+      - key: COLDOPEN_CORS_ORIGINS
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+
+  # ---- Frontend (static site) ----
+  - type: web
+    name: cold-open-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      # Set to the API's public URL after first deploy, then redeploy (see header).
+      - key: VITE_API_BASE
+        sync: false
+    routes:
+      # SPA fallback so client-side routes resolve to index.html.
+      - type: rewrite
+        source: /*
+        destination: /index.html

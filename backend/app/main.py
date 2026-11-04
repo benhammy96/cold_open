@@ -31,10 +31,11 @@ from .tokens import sign_run, verify_run
 settings = get_settings()
 app = FastAPI(title="Cold Open API", version="0.1.0")
 
-# Dev CORS: the Vite dev server also proxies /api, but allow direct calls too.
+# CORS: configurable origins (Vite dev server locally, the deployed frontend in
+# production via COLDOPEN_CORS_ORIGINS).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=settings.cors_origin_list,
     allow_methods=["*"],
     allow_headers=["*"],
 )

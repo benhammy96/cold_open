@@ -5,16 +5,39 @@ Everything here can be overridden via environment variables prefixed with COLDOP
 """
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from zoneinfo import ZoneInfo
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _resolve_database_url() -> str:
+    """Pick the DB URL and normalize the scheme for SQLAlchemy 2.x + psycopg 3.
+
+    Precedence: COLDOPEN_DATABASE_URL (explicit local override) > DATABASE_URL
+    (what managed hosts like Render inject) > local SQLite default. Managed hosts
+    often hand out 'postgres://...' which SQLAlchemy no longer accepts, so we
+    rewrite it to 'postgresql+psycopg://...'.
+    """
+    url = os.environ.get("COLDOPEN_DATABASE_URL") or os.environ.get("DATABASE_URL")
+    if not url:
+        return "sqlite:///./cold_open.db"
+    if url.startswith("postgres://"):
+        url = "postgresql+psycopg://" + url[len("postgres://"):]
+    elif url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url[len("postgresql://"):]
+    return url
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="COLDOPEN_", env_file=".env", extra="ignore")
 
-    database_url: str = "sqlite:///./cold_open.db"
+    database_url: str = _resolve_database_url()
+
+    # Comma-separated list of allowed browser origins for the API (CORS). In prod
+    # this is the deployed frontend URL; locally the Vite dev server.
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     # Daily reset timezone (R2). Puzzle id is the calendar date in this zone.
     daily_timezone: str = "America/New_York"
@@ -45,6 +68,10 @@ class Settings(BaseSettings):
     @property
     def tz(self) -> ZoneInfo:
         return ZoneInfo(self.daily_timezone)
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
 
 # Tier table (R19). share is the UPPER bound (exclusive) that maps to the tier,

@@ -70,6 +70,31 @@ npm run dev
 
 App at http://localhost:5173 (proxies /api to the backend on :8000).
 
+## Deploy (Render)
+
+`render.yaml` is a Render Blueprint defining three resources: managed Postgres,
+the FastAPI API, and the static frontend.
+
+1. In the Render dashboard, **New → Blueprint**, connect this repo. Render creates
+   the database and both services. The API auto-wires `DATABASE_URL` and generates
+   `COLDOPEN_TOKEN_SECRET`; its prestart seeds the DB from keyless fixtures.
+2. Two cross-origin URLs can't be auto-wired (a service's public URL isn't known
+   until it exists), so set them in the dashboard after the first deploy, then
+   redeploy each service:
+   - `cold-open-web` → `VITE_API_BASE` = the API's public URL (e.g.
+     `https://cold-open-api.onrender.com`)
+   - `cold-open-api` → `COLDOPEN_CORS_ORIGINS` = the site's public URL (e.g.
+     `https://cold-open-web.onrender.com`)
+3. Open the static site URL to play.
+
+The API switches to Postgres automatically via `DATABASE_URL` (a `postgres://`
+value is normalized to `postgresql+psycopg://`). Re-seeding is idempotent
+(`python -m app.seed --if-empty` only seeds an empty DB). See `backend/.env.example`
+and `frontend/.env.example` for all variables.
+
+> **Free tier note:** the free API instance sleeps when idle, so the first
+> request after a quiet period takes a few seconds to wake.
+
 ## Design decisions baked in
 
 - **Server-authoritative** scoring and timing. No valid-answer or rarity data reaches the client before submission (R9, R10, R50).

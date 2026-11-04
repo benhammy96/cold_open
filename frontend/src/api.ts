@@ -77,8 +77,13 @@ export interface RunResult {
   share: ShareCard;
 }
 
+// In dev, requests hit "/api/..." and Vite proxies to the backend. In prod the
+// API lives on a different origin, so VITE_API_BASE (set at build time) is
+// prepended. Trailing slash is trimmed so paths join cleanly.
+const API_BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
   });
