@@ -25,9 +25,10 @@ services:
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    # Idempotent: seeds only if the DB has no puzzles, so redeploys never wipe data.
-    preDeployCommand: python -m app.seed --if-empty
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    # Seed on boot, then start the server. seed --if-empty is idempotent and
+    # non-destructive (only seeds an empty DB), so it's safe to run every start.
+    # (Free tier doesn't support preDeployCommand, so we chain it into start.)
+    startCommand: python -m app.seed --if-empty && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
