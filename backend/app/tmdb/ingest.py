@@ -142,8 +142,19 @@ def upsert_entities(db: Session, records: list[EntityRecord]) -> tuple[int, int]
     return created, updated
 
 
-def ingest(db: Session, movie_pages: int = 5, tv_pages: int = 3) -> dict:
-    """Entry point. Uses live TMDB if a key is set, else fixtures."""
+def ingest(db: Session, movie_pages: int | None = None, tv_pages: int | None = None) -> dict:
+    """Entry point. Uses live TMDB if a key is set, else fixtures.
+
+    Page counts default to the configured volume (COLDOPEN_TMDB_MOVIE_PAGES /
+    _TV_PAGES) so prod can pull a large catalog without code changes."""
+    from ..config import get_settings
+
+    settings = get_settings()
+    if movie_pages is None:
+        movie_pages = settings.tmdb_movie_pages
+    if tv_pages is None:
+        tv_pages = settings.tmdb_tv_pages
+
     client = TMDBClient()
     if client.offline:
         records = _records_from_fixtures()

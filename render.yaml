@@ -25,10 +25,11 @@ services:
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    # Seed on boot, then start the server. seed --if-empty is idempotent and
-    # non-destructive (only seeds an empty DB), so it's safe to run every start.
-    # (Free tier doesn't support preDeployCommand, so we chain it into start.)
-    startCommand: python -m app.seed --if-empty && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    # Seed on boot, then start the server. `seed --boot` seeds only an empty DB by
+    # default (non-destructive), or forces a full reseed when RESEED_ON_BOOT=true
+    # (used once after adding the TMDB key). Free tier has no preDeployCommand, so
+    # this chains into start.
+    startCommand: python -m app.seed --boot && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
@@ -41,6 +42,21 @@ services:
       # Set to the static site's public URL after first deploy (see header).
       - key: COLDOPEN_CORS_ORIGINS
         sync: false
+      # TMDB key — set the VALUE in the Render dashboard, never in this file.
+      - key: TMDB_API_KEY
+        sync: false
+      # On real TMDB data, enforce the §4 rule (>= 40 answers/prompt).
+      - key: COLDOPEN_STRICT_CONTENT
+        value: "true"
+      # Real-catalog ingest volume (~5000 movies + ~3000 shows).
+      - key: COLDOPEN_TMDB_MOVIE_PAGES
+        value: "250"
+      - key: COLDOPEN_TMDB_TV_PAGES
+        value: "150"
+      # Flip to true + redeploy ONCE to reseed with real data, then set back to
+      # false so restarts don't wipe play data.
+      - key: COLDOPEN_RESEED_ON_BOOT
+        value: "false"
       - key: PYTHON_VERSION
         value: "3.12.10"
 

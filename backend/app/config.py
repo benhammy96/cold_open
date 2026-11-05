@@ -65,6 +65,18 @@ class Settings(BaseSettings):
     strict_content: bool = False
     min_answers_fixture: int = 6
 
+    # Deploy reseed toggle. The start command runs `seed --boot`: normally that
+    # seeds only an empty DB (safe). Set COLDOPEN_RESEED_ON_BOOT=true to force a
+    # full reseed on the next boot (used once after adding the TMDB key), then set
+    # it back to false so restarts don't wipe accumulated play data.
+    reseed_on_boot: bool = False
+
+    # TMDB ingest volume (live mode only). Each page is ~20 titles. Defaults are
+    # modest for local runs; prod sets COLDOPEN_TMDB_MOVIE_PAGES / _TV_PAGES high
+    # (e.g. 250 / 150 -> ~5000 movies + ~3000 shows) for real depth.
+    tmdb_movie_pages: int = 25
+    tmdb_tv_pages: int = 15
+
     @property
     def tz(self) -> ZoneInfo:
         return ZoneInfo(self.daily_timezone)

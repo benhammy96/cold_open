@@ -26,11 +26,16 @@ def _valid_answers_for_today():
             )
         )
         titles: list[str] = []
+        used: set[str] = set()  # entity ids already chosen (avoid cross-prompt dupes)
         for pid in puzzle.prompt_ids:
-            pa = db.scalar(
-                select(PromptAnswer).where(PromptAnswer.prompt_id == pid).limit(1)
-            )
-            ent = db.get(Entity, pa.entity_id)
+            # Pick the first answer for this prompt whose entity hasn't been used
+            # by an earlier prompt, so the run never triggers the duplicate rule.
+            pas = db.scalars(
+                select(PromptAnswer).where(PromptAnswer.prompt_id == pid)
+            ).all()
+            chosen = next((pa for pa in pas if pa.entity_id not in used), pas[0])
+            used.add(chosen.entity_id)
+            ent = db.get(Entity, chosen.entity_id)
             titles.append(ent.canonical_title)
         return titles
     finally:

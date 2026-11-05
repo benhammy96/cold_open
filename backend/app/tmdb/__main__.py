@@ -14,8 +14,9 @@ from .ingest import ingest
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Ingest TMDB entities.")
-    parser.add_argument("--movie-pages", type=int, default=5)
-    parser.add_argument("--tv-pages", type=int, default=3)
+    # Default None -> use configured volume (COLDOPEN_TMDB_MOVIE_PAGES/_TV_PAGES).
+    parser.add_argument("--movie-pages", type=int, default=None)
+    parser.add_argument("--tv-pages", type=int, default=None)
     args = parser.parse_args()
 
     Base.metadata.create_all(bind=engine)

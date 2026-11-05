@@ -95,6 +95,29 @@ and `frontend/.env.example` for all variables.
 > **Free tier note:** the free API instance sleeps when idle, so the first
 > request after a quiet period takes a few seconds to wake.
 
+### Adding the real TMDB catalog (Task 8)
+
+The first deploy runs on the keyless fixture catalog. To switch to real data:
+
+1. On the **cold-open-api** service, set env vars (the blueprint pre-declares
+   these; set the key's VALUE in the dashboard, never in the repo):
+   - `TMDB_API_KEY` = your v3 key (or use `TMDB_READ_TOKEN` for a v4 bearer)
+   - `COLDOPEN_STRICT_CONTENT` = `true`, `COLDOPEN_TMDB_MOVIE_PAGES` / `_TV_PAGES`
+     control ingest volume (defaults 250 / 150 ≈ 5000 movies + 3000 shows)
+2. Set `COLDOPEN_RESEED_ON_BOOT` = `true` and **redeploy** the API. On boot it
+   runs a full reseed from TMDB (ingest → resolve → validate → publish). Watch
+   the deploy logs for the summary and any "Unresolved curated titles" — those
+   are `prompts.yaml` titles that didn't match a real TMDB entity; fix and
+   redeploy.
+3. Set `COLDOPEN_RESEED_ON_BOOT` back to `false` so future restarts don't wipe
+   accumulated play data.
+
+Reseeding replaces content (entities, prompts, schedule) but is only triggered
+by the toggle; normal restarts seed only an empty DB.
+
+> **SSL note:** the TMDB client uses the `certifi` CA bundle explicitly, so HTTPS
+> calls work on containers without a configured system trust store.
+
 ## Design decisions baked in
 
 - **Server-authoritative** scoring and timing. No valid-answer or rarity data reaches the client before submission (R9, R10, R50).

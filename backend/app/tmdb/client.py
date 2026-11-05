@@ -14,13 +14,21 @@ from __future__ import annotations
 
 import json
 import os
+import ssl
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 
+import certifi
+
 BASE = "https://api.themoviedb.org/3"
+
+# Use certifi's CA bundle explicitly. Python's urllib otherwise relies on the
+# system trust store, which is often missing/misconfigured on macOS and minimal
+# Linux containers, causing SSL CERTIFICATE_VERIFY_FAILED on HTTPS calls.
+_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 
 
 class TMDBError(RuntimeError):
@@ -76,7 +84,7 @@ class TMDBClient:
         req = urllib.request.Request(url, headers=headers)
         self._pace()
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            with urllib.request.urlopen(req, timeout=30, context=_SSL_CONTEXT) as resp:
                 return json.loads(resp.read().decode())
         except urllib.error.HTTPError as e:
             if e.code in (429, 500, 502, 503, 504) and _attempt < 4:

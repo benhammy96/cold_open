@@ -42,7 +42,13 @@ def reset_schema() -> None:
 def _ensure_curated_stubs(db, prompt: PromptDef) -> None:
     """Create low-signal entity stubs for curated titles missing from the catalog
     so the prompt is playable offline. Stubs get a small popularity so a real
-    ingested row (higher popularity) always wins during resolution."""
+    ingested row (higher popularity) always wins during resolution.
+
+    Skipped in strict_content (live/prod) mode: there we WANT a curated title that
+    doesn't match the real TMDB catalog to surface as unresolved, rather than be
+    papered over by a stub (so authoring mistakes are caught)."""
+    if settings.strict_content:
+        return
     if prompt.kind != "curated" and not (prompt.query and prompt.query.titles):
         return
     titles = list(prompt.answers) if prompt.kind == "curated" else list(prompt.query.titles)
@@ -84,11 +90,14 @@ def seed(prompts_path: str = DEFAULT_PROMPTS) -> None:
 
         prompt_ids: list[str] = []
         failures: list[str] = []
+        unresolved: dict[str, list[str]] = {}
         for pdef in corpus:
             _ensure_curated_stubs(db, pdef)
             db.flush()
 
             resolution = resolve(db, pdef)
+            if resolution.unresolved_titles:
+                unresolved[pdef.id] = resolution.unresolved_titles
             vr = validate_prompt(pdef, resolution.as_pairs(), min_answers=min_answers)
             if not vr.ok:
                 failures.append(f"{pdef.id}: {'; '.join(vr.errors)}")
@@ -133,6 +142,11 @@ def seed(prompts_path: str = DEFAULT_PROMPTS) -> None:
             print("Skipped prompts (insufficient/invalid):")
             for f in failures:
                 print(f"  - {f}")
+        if unresolved:
+            total = sum(len(v) for v in unresolved.values())
+            print(f"Unresolved curated titles ({total}) — fix these in prompts.yaml:")
+            for pid, titles in unresolved.items():
+                print(f"  {pid}: {', '.join(titles)}")
     finally:
         db.close()
 
@@ -177,6 +191,17 @@ def seed_if_empty(prompts_path: str = DEFAULT_PROMPTS) -> bool:
     return True
 
 
+def boot_seed(prompts_path: str = DEFAULT_PROMPTS) -> None:
+    """Deploy boot entry. Honors COLDOPEN_RESEED_ON_BOOT: when true, force a full
+    reseed (used once after adding the TMDB key); otherwise seed only if empty."""
+    if settings.reseed_on_boot:
+        print("RESEED_ON_BOOT=true -> forcing full reseed")
+        seed(prompts_path)
+    else:
+        did = seed_if_empty(prompts_path)
+        print("Seeded (DB was empty)." if did else "Content already present; skipped.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed Cold Open content.")
     parser.add_argument("--prompts", default=DEFAULT_PROMPTS)
@@ -185,8 +210,15 @@ def main() -> None:
         action="store_true",
         help="Only seed when the DB has no puzzles (safe for deploy boot).",
     )
+    parser.add_argument(
+        "--boot",
+        action="store_true",
+        help="Deploy boot mode: full reseed if COLDOPEN_RESEED_ON_BOOT=true, else seed-if-empty.",
+    )
     args = parser.parse_args()
-    if args.if_empty:
+    if args.boot:
+        boot_seed(args.prompts)
+    elif args.if_empty:
         did = seed_if_empty(args.prompts)
         print("Seeded." if did else "Content already present; skipped.")
     else:

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { api, type Daily, type StartRun } from "./api";
 import { getAnonToken, prefersReducedMotion, recallRun, rememberRun } from "./player";
+import { SiteFooter } from "./components/SiteFooter";
 import { GameScreen } from "./screens/GameScreen";
 import { ResultScreen } from "./screens/ResultScreen";
 
@@ -114,6 +115,7 @@ export default function App() {
         {/* Film strip + phone column. */}
         <div className="film-strip hidden w-5 md:block" aria-hidden />
         <div className="relative flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-navy shadow-[0_0_60px_rgba(0,0,0,0.6)] md:my-6 md:h-[min(860px,calc(100dvh-3rem))] md:rounded-[1.75rem] md:border md:border-white/10 md:shadow-[0_0_80px_rgba(255,204,51,0.08)]">
+        <div className="flex min-h-0 flex-1 flex-col">
         {phase === "loading" && <Centered>Loading today's Cold Open…</Centered>}
 
         {phase === "error" && (
@@ -156,6 +158,8 @@ export default function App() {
         {phase === "result" && run && (
           <ResultScreen runId={run.run_id} runToken={run.run_token} />
         )}
+        </div>
+        <SiteFooter />
         </div>
         <div className="film-strip hidden w-5 md:block" aria-hidden />
       </div>
