@@ -46,6 +46,55 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/api/stats")
+def stats(token: str | None = None, db: Session = Depends(get_db)) -> dict:
+    """Content-health snapshot for ops/launch verification.
+
+    Public fields are aggregate only (no answer leakage, R10). The detailed
+    `stub_only_prompts` list (curated titles that never matched a real TMDB
+    entity and resolved to a stub) is returned ONLY when `token` matches
+    COLDOPEN_ADMIN_TOKEN, since those titles are valid answers.
+    """
+    from sqlalchemy import func, select
+
+    from .models import Entity, Prompt, PromptAnswer
+
+    entity_total = db.scalar(select(func.count()).select_from(Entity)) or 0
+    by_source = dict(
+        db.execute(select(Entity.source, func.count()).group_by(Entity.source)).all()
+    )
+    by_type = dict(
+        db.execute(select(Entity.type, func.count()).group_by(Entity.type)).all()
+    )
+    published_prompts = db.scalar(select(func.count()).select_from(Prompt)) or 0
+
+    out: dict = {
+        "entities_total": entity_total,
+        "entities_by_source": by_source,
+        "entities_by_type": by_type,
+        "published_prompts": published_prompts,
+        "mode": "tmdb" if by_source.get("tmdb", 0) > 0 else "fixture",
+    }
+
+    import os
+
+    admin = os.environ.get("COLDOPEN_ADMIN_TOKEN")
+    if admin and token == admin:
+        # For each prompt, count answers that resolved only to a stub (unmatched
+        # curated titles) and list them so authoring can be fixed.
+        stub_report: dict[str, list[str]] = {}
+        rows = db.execute(
+            select(Prompt.id, Prompt.text, Entity.canonical_title)
+            .join(PromptAnswer, Prompt.id == PromptAnswer.prompt_id)
+            .join(Entity, Entity.id == PromptAnswer.entity_id)
+            .where(Entity.source == "stub")
+        ).all()
+        for _pid, text, title in rows:
+            stub_report.setdefault(text, []).append(title)
+        out["stub_only_answers"] = stub_report
+    return out
+
+
 @app.get("/api/daily", response_model=DailyPublic)
 def get_daily(date: str | None = None, db: Session = Depends(get_db)) -> DailyPublic:
     date_str = date or service.today_str(settings)

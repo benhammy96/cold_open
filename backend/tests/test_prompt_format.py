@@ -58,6 +58,44 @@ def test_bad_entity_type_rejected():
         )
 
 
+def test_colon_title_parsed_as_mapping_is_rejected():
+    # Unquoted 'Kill Bill: Vol. 1' parses as a YAML mapping; must be rejected loudly.
+    y = (
+        "prompts:\n"
+        "  - id: x\n    text: Name a movie\n    kind: curated\n"
+        "    accepted_entity_types: [movie]\n"
+        "    answers:\n      - Kill Bill: Vol. 1\n"
+    )
+    with pytest.raises(PromptParseError):
+        parse_prompts_yaml(y)
+
+
+def test_quoted_colon_title_ok():
+    y = (
+        "prompts:\n"
+        "  - id: x\n    text: Name a movie\n    kind: curated\n"
+        "    accepted_entity_types: [movie]\n"
+        '    answers:\n      - "Kill Bill: Vol. 1"\n'
+    )
+    [p] = parse_prompts_yaml(y)
+    assert p.answers == ["Kill Bill: Vol. 1"]
+
+
+def test_real_corpus_parses_clean():
+    # The shipped corpus must parse with no mangled (non-string) answers.
+    import os
+
+    corpus = os.path.join(os.path.dirname(__file__), "..", "content", "prompts.yaml")
+    prompts = __import__("app.prompts.schema", fromlist=["load_prompts_file"]).load_prompts_file(corpus)
+    assert len(prompts) >= 60
+    for p in prompts:
+        for a in p.answers:
+            assert isinstance(a, str)
+        if p.query:
+            for t in p.query.titles:
+                assert isinstance(t, str)
+
+
 def test_duplicate_ids_rejected():
     y = (
         "prompts:\n"

@@ -330,8 +330,8 @@ prompts:
       - Reservoir Dogs
       - Pulp Fiction
       - Jackie Brown
-      - Kill Bill: Vol. 1
-      - Kill Bill: Vol. 2
+      - "Kill Bill: Vol. 1"
+      - "Kill Bill: Vol. 2"
       - Death Proof
       - Inglourious Basterds
       - Django Unchained
@@ -388,7 +388,7 @@ prompts:
       - Titanic
       - Gladiator
       - Chicago
-      - The Lord of the Rings: The Return of the King
+      - "The Lord of the Rings: The Return of the King"
       - Million Dollar Baby
       - The Departed
       - No Country for Old Men
@@ -420,19 +420,19 @@ prompts:
       - Iron Man
       - The Incredible Hulk
       - Thor
-      - Captain America: The First Avenger
+      - "Captain America: The First Avenger"
       - The Avengers
       - Guardians of the Galaxy
-      - Avengers: Age of Ultron
+      - "Avengers: Age of Ultron"
       - Doctor Strange
       - Black Panther
-      - Avengers: Infinity War
+      - "Avengers: Infinity War"
       - Captain Marvel
-      - Avengers: Endgame
-      - Spider-Man: Far From Home
+      - "Avengers: Endgame"
+      - "Spider-Man: Far From Home"
       - Shang-Chi and the Legend of the Ten Rings
       - Eternals
-      - Spider-Man: No Way Home
+      - "Spider-Man: No Way Home"
 
   - id: star-wars-films
     text: "Name a Star Wars movie"
@@ -446,11 +446,11 @@ prompts:
       - "Star Wars: Episode I - The Phantom Menace"
       - "Star Wars: Episode II - Attack of the Clones"
       - "Star Wars: Episode III - Revenge of the Sith"
-      - Star Wars: The Force Awakens
-      - Rogue One: A Star Wars Story
-      - Star Wars: The Last Jedi
-      - Solo: A Star Wars Story
-      - Star Wars: The Rise of Skywalker
+      - "Star Wars: The Force Awakens"
+      - "Rogue One: A Star Wars Story"
+      - "Star Wars: The Last Jedi"
+      - "Solo: A Star Wars Story"
+      - "Star Wars: The Rise of Skywalker"
 
   - id: pixar-films
     text: "Name a Pixar movie"
@@ -482,12 +482,12 @@ prompts:
     accepted_entity_types: [movie]
     tags: [franchise, fantasy]
     answers:
-      - The Lord of the Rings: The Fellowship of the Ring
-      - The Lord of the Rings: The Two Towers
-      - The Lord of the Rings: The Return of the King
-      - The Hobbit: An Unexpected Journey
-      - The Hobbit: The Desolation of Smaug
-      - The Hobbit: The Battle of the Five Armies
+      - "The Lord of the Rings: The Fellowship of the Ring"
+      - "The Lord of the Rings: The Two Towers"
+      - "The Lord of the Rings: The Return of the King"
+      - "The Hobbit: An Unexpected Journey"
+      - "The Hobbit: The Desolation of Smaug"
+      - "The Hobbit: The Battle of the Five Armies"
 
   # ---------------- Curated: premise ----------------
   - id: heist-movies
@@ -520,7 +520,7 @@ prompts:
       - Back to the Future
       - Back to the Future Part II
       - The Terminator
-      - Terminator 2: Judgment Day
+      - "Terminator 2: Judgment Day"
       - Groundhog Day
       - 12 Monkeys
       - Donnie Darko
@@ -528,7 +528,7 @@ prompts:
       - Looper
       - Edge of Tomorrow
       - Interstellar
-      - Avengers: Endgame
+      - "Avengers: Endgame"
       - Tenet
 
   - id: zombie-movies
@@ -568,8 +568,8 @@ prompts:
       - Joker
       - The Batman
       - Man of Steel
-      - Captain America: The Winter Soldier
-      - Spider-Man: Into the Spider-Verse
+      - "Captain America: The Winter Soldier"
+      - "Spider-Man: Into the Spider-Verse"
 
   # ---------------- Curated: people (actors) ----------------
   - id: tom-hanks-films
@@ -755,7 +755,7 @@ prompts:
       - Armageddon
       - Deep Impact
       - The Day After Tomorrow
-      - 2012
+      - "2012"
       - San Andreas
       - The Towering Inferno
       - Dante's Peak
@@ -773,9 +773,9 @@ prompts:
       - Casino Royale
       - Skyfall
       - The Bourne Identity
-      - Mission: Impossible
+      - "Mission: Impossible"
       - Tinker Tailor Soldier Spy
-      - Kingsman: The Secret Service
+      - "Kingsman: The Secret Service"
       - Spy
       - Atomic Blonde
       - Bridge of Spies
@@ -833,9 +833,9 @@ prompts:
       - I Am Legend
       - Snowpiercer
       - WALL·E
-      - Mad Max: Fury Road
+      - "Mad Max: Fury Road"
       - A Quiet Place
       - The Book of Eli
       - 28 Days Later
       - The Matrix
-      - Terminator 2: Judgment Day
+      - "Terminator 2: Judgment Day"

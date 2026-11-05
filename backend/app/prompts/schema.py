@@ -68,6 +68,25 @@ class PromptDef:
     query: QuerySpec | None = None
 
 
+def _clean_titles(items: list, ctx: str) -> list[str]:
+    """Normalize a title list, rejecting non-string entries loudly.
+
+    A title containing a colon (e.g. 'Kill Bill: Vol. 1') must be QUOTED in YAML,
+    or PyYAML parses it as a mapping {'Kill Bill': 'Vol. 1'}. Catch that here with
+    a clear message instead of silently stringifying a dict into junk."""
+    out: list[str] = []
+    for a in items:
+        if isinstance(a, (dict, list)):
+            raise PromptParseError(
+                f"{ctx}: answer parsed as {type(a).__name__}, not text: {a!r}. "
+                f"A title with a colon must be quoted in YAML."
+            )
+        s = str(a).strip()
+        if s:
+            out.append(s)
+    return out
+
+
 def _require(d: dict, key: str, ctx: str):
     if key not in d:
         raise PromptParseError(f"{ctx}: missing required field '{key}'")
@@ -99,7 +118,7 @@ def parse_prompt(raw: dict, index: int) -> PromptDef:
         answers = _require(raw, "answers", f"{ctx} ({pid})")
         if not isinstance(answers, list):
             raise PromptParseError(f"{ctx} ({pid}): answers must be a list")
-        answers = [str(a).strip() for a in answers if str(a).strip()]
+        answers = _clean_titles(answers, f"{ctx} ({pid})")
         return PromptDef(
             id=pid, text=text, kind=kind, accepted_entity_types=list(types),
             tags=tags, difficulty=difficulty, answers=answers,
@@ -115,7 +134,7 @@ def parse_prompt(raw: dict, index: int) -> PromptDef:
         year_min=q.get("year_min"),
         year_max=q.get("year_max"),
         min_vote_count=int(q.get("min_vote_count", 0) or 0),
-        titles=[str(t).strip() for t in (q.get("titles", []) or []) if str(t).strip()],
+        titles=_clean_titles(q.get("titles", []) or [], f"{ctx} ({pid}) query.titles"),
         limit=int(q.get("limit", 200) or 200),
     )
     return PromptDef(
