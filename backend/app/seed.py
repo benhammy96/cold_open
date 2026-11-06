@@ -89,6 +89,7 @@ def seed(prompts_path: str = DEFAULT_PROMPTS) -> None:
         min_answers = MIN_ANSWERS if settings.strict_content else settings.min_answers_fixture
 
         prompt_ids: list[str] = []
+        prompt_categories: dict[str, str] = {}  # prompt_id -> category
         failures: list[str] = []
         unresolved: dict[str, list[str]] = {}
         for pdef in corpus:
@@ -114,6 +115,7 @@ def seed(prompts_path: str = DEFAULT_PROMPTS) -> None:
             db.add(prompt)
             db.flush()
             prompt_ids.append(prompt.id)
+            prompt_categories[prompt.id] = prompt.category
             for ans in resolution.answers:
                 db.add(
                     PromptAnswer(
@@ -130,7 +132,7 @@ def seed(prompts_path: str = DEFAULT_PROMPTS) -> None:
                 f"{settings.prompts_per_daily} for a Daily."
             )
 
-        _build_schedule(db, prompt_ids)
+        _build_schedule(db, prompt_ids, prompt_categories)
         db.commit()
 
         print(
@@ -151,17 +153,39 @@ def seed(prompts_path: str = DEFAULT_PROMPTS) -> None:
         db.close()
 
 
-def _build_schedule(db, prompt_ids: list[str]) -> None:
-    """Register a window of distinct daily puzzles. Each day draws 7 prompts via
-    a date-seeded shuffle so every date is a different, reproducible set."""
+def _pick_varied(pool: list[str], categories: dict[str, str], per: int, rng: random.Random) -> list[str]:
+    """Pick `per` prompts spread across categories: round-robin over shuffled
+    category buckets so one dominant category (e.g. era/genre queries) can't fill
+    a whole day. Falls back to any remaining prompts if categories run dry."""
+    buckets: dict[str, list[str]] = {}
+    for pid in pool:
+        buckets.setdefault(categories.get(pid, "general"), []).append(pid)
+    for b in buckets.values():
+        rng.shuffle(b)
+    cats = list(buckets.keys())
+    rng.shuffle(cats)
+
+    chosen: list[str] = []
+    # Round-robin: take one from each category in turn until we have `per`.
+    while len(chosen) < per and any(buckets[c] for c in cats):
+        for c in cats:
+            if buckets[c]:
+                chosen.append(buckets[c].pop())
+                if len(chosen) >= per:
+                    break
+    return chosen[:per]
+
+
+def _build_schedule(db, prompt_ids: list[str], categories: dict[str, str]) -> None:
+    """Register a window of distinct daily puzzles. Each day draws a reproducible,
+    category-varied set of `per` prompts (date-seeded) so dailies feel diverse
+    rather than, say, seven era queries in a row."""
     today = datetime.now(settings.tz).date()
     per = settings.prompts_per_daily
     for offset in range(-3, 15):
         d = today + timedelta(days=offset)
         rng = random.Random(d.toordinal())  # reproducible per date
-        pool = list(prompt_ids)
-        rng.shuffle(pool)
-        chosen = pool[:per]
+        chosen = _pick_varied(prompt_ids, categories, per, rng)
         db.add(
             Puzzle(
                 date=d.isoformat(),

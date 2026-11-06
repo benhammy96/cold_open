@@ -41,6 +41,37 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Baseline security headers for a public API. These harden the JSON API
+    responses; the frontend is served separately as a static site. HSTS is only
+    meaningful over HTTPS (Render terminates TLS), harmless otherwise."""
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault(
+        "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+    )
+    # The API only ever returns JSON; disallow embedding/scripts outright.
+    response.headers.setdefault(
+        "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"
+    )
+    return response
+
+
+@app.get("/")
+def root() -> dict:
+    """Friendly root so the API origin isn't a bare 404. The game UI is the
+    separate static site."""
+    return {
+        "name": "Cold Open API",
+        "docs": "/docs",
+        "health": "/api/health",
+        "daily": "/api/daily",
+    }
+
+
 @app.get("/api/health")
 def health() -> dict:
     return {"status": "ok"}
