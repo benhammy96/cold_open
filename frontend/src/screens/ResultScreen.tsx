@@ -42,70 +42,86 @@ export function ResultScreen({ runId, runToken }: Props) {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-navy px-5 py-6 text-spotlight">
-      <h1 className="text-center font-pixel text-lg text-gold">That's a wrap!</h1>
+    <div className="mx-auto w-full max-w-5xl px-5 py-8 text-spotlight md:px-8 md:py-12">
+      <div className="marquee-lights mx-auto mb-8 h-2 w-full max-w-xl rounded" aria-hidden />
 
-      <div className="my-4 text-center">
-        <div className="font-pixel text-4xl text-spotlight">
+      {/* Hero: score + location */}
+      <div className="text-center">
+        <h1 className="font-pixel text-xl text-gold md:text-3xl">That's a wrap!</h1>
+        <div className="mt-6 font-pixel text-5xl text-spotlight md:text-7xl">
           {result.total_score}
-          <span className="text-base text-haze">/{result.max_score}</span>
+          <span className="text-2xl text-haze md:text-3xl">/{result.max_score}</span>
         </div>
-        <div className="mt-1 text-sm text-gold">
+        <div className="mt-3 text-lg text-gold md:text-xl">
           {share.location_emoji} {result.location_name}
         </div>
-        <div className="text-xs text-haze">🔥 Streak: {result.streak}</div>
+        <div className="mt-1 text-sm text-haze">🔥 Streak: {result.streak}</div>
+
+        {/* Emoji grid preview */}
+        <div className="mt-6 flex justify-center gap-1.5" aria-hidden>
+          {result.submissions.map((s) => (
+            <div
+              key={s.prompt_index}
+              className={`h-8 w-8 rounded ${TIER_SWATCH[s.tier] ?? "bg-dusk"}`}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Emoji grid preview */}
-      <div className="mb-4 flex justify-center gap-1" aria-hidden>
-        {result.submissions.map((s) => (
-          <div
-            key={s.prompt_index}
-            className={`h-6 w-6 rounded-sm ${TIER_SWATCH[s.tier] ?? "bg-dusk"}`}
-          />
-        ))}
-      </div>
+      {/* Two-column body: breakdown + share, using the width */}
+      <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+        {/* Per-prompt breakdown */}
+        <div>
+          <h2 className="mb-3 font-pixel text-xs text-gold">YOUR ANSWERS</h2>
+          <ul className="space-y-2">
+            {result.submissions.map((s) => (
+              <li
+                key={s.prompt_index}
+                className="flex items-center gap-4 rounded-lg bg-navy2/60 px-4 py-3"
+              >
+                <span
+                  className={`h-4 w-4 shrink-0 rounded-sm ${TIER_SWATCH[s.tier] ?? "bg-dusk"}`}
+                  aria-hidden
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs text-haze">{s.prompt_text}</div>
+                  <div className="truncate text-sm">
+                    <span className={s.valid ? "text-spotlight" : "text-carpet"}>
+                      {s.valid ? s.canonical_title : s.raw_input || "—"}
+                    </span>
+                    {s.valid && s.global_percentage > 0 && (
+                      <span className="ml-2 text-[11px] text-haze">
+                        {s.global_percentage}% named this
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className="shrink-0 font-pixel text-xs text-gold">
+                  {s.valid ? `${s.tier_name} +${s.points}` : "CUT +0"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-      {/* Per-prompt reveal */}
-      <ul className="mb-4 space-y-2">
-        {result.submissions.map((s) => (
-          <li
-            key={s.prompt_index}
-            className="rounded bg-navy2 px-3 py-2 text-sm"
+        {/* Share card */}
+        <div className="lg:sticky lg:top-6 lg:self-start">
+          <h2 className="mb-3 font-pixel text-xs text-gold">SHARE</h2>
+          <pre className="whitespace-pre-wrap rounded-lg bg-navy2/60 p-4 text-center text-sm">
+            {share.text}
+          </pre>
+          <button
+            onClick={copyShare}
+            className="mt-3 w-full rounded-lg bg-gold py-3 font-pixel text-xs text-navy transition-transform hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-gold/60 active:scale-95"
           >
-            <div className="text-xs text-haze">{s.prompt_text}</div>
-            <div className="flex items-center justify-between">
-              <span className={s.valid ? "text-spotlight" : "text-carpet"}>
-                {s.valid ? s.canonical_title : s.raw_input || "—"}
-              </span>
-              <span className="font-pixel text-xs text-gold">
-                {s.valid ? `${s.tier_name} +${s.points}` : "CUT +0"}
-              </span>
-            </div>
-            {s.valid && s.global_percentage > 0 && (
-              <div className="text-[10px] text-haze">
-                {s.global_percentage}% of players named this
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      <pre className="mb-3 whitespace-pre-wrap rounded bg-navy2 p-3 text-center text-sm">
-        {share.text}
-      </pre>
-
-      <button
-        onClick={copyShare}
-        className="rounded bg-gold py-3 font-pixel text-xs text-navy"
-      >
-        {copied ? "COPIED!" : "SHARE YOUR SCORE"}
-      </button>
-
-      <p className="mt-4 text-center text-[11px] text-haze">
-        Come back tomorrow for a new Cold Open. This product uses movie &amp; TV
-        data modeled on TMDB and is not endorsed or certified by TMDB.
-      </p>
+            {copied ? "COPIED!" : "SHARE YOUR SCORE"}
+          </button>
+          <p className="mt-4 text-center text-[11px] text-haze">
+            Come back tomorrow for a new Cold Open. Uses the TMDB API but is not
+            endorsed or certified by TMDB.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

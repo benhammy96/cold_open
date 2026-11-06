@@ -75,74 +75,26 @@ export default function App() {
   }, [daily]);
 
   return (
-    <div className="theater-bg relative flex min-h-dvh items-center justify-center overflow-hidden">
-      {/* Drifting spotlight glow behind everything (desktop ambiance). */}
-      <div className="theater-spot pointer-events-none absolute inset-0 hidden md:block" aria-hidden />
+    // Full-viewport theater. No phone column — regions fill 100vw/100vh.
+    <div className="theater-bg relative flex h-dvh w-full flex-col overflow-hidden">
+      {/* Drifting spotlight glow behind everything. */}
+      <div className="theater-spot pointer-events-none absolute inset-0" aria-hidden />
 
-      {/* Wide-screen layout: info panel + framed phone, centered together. */}
-      <div className="relative z-10 flex w-full max-w-5xl items-stretch justify-center gap-0 md:gap-8 md:px-6">
-        {/* Left info panel — only on large screens, fills the void with context. */}
-        <aside className="hidden flex-col justify-center py-10 text-spotlight lg:flex lg:w-80">
-          <h1 className="font-pixel text-3xl leading-tight text-gold">
-            COLD
-            <br />
-            OPEN
-          </h1>
-          <p className="mt-4 text-sm text-haze">
-            A daily movie &amp; TV game. Everyone gets the same 7 prompts. The
-            rarer your answer, the higher you climb the fame ladder.
-          </p>
-          <ol className="mt-6 space-y-2 text-sm text-spotlight/90">
-            <li>
-              <span className="font-pixel text-xs text-gold">1 </span>
-              Read the prompt, type one answer.
-            </li>
-            <li>
-              <span className="font-pixel text-xs text-gold">2 </span>
-              Obvious answers barely score. Deep cuts launch you up.
-            </li>
-            <li>
-              <span className="font-pixel text-xs text-gold">3 </span>
-              Finish all 7 and share your score — no spoilers.
-            </li>
-          </ol>
-          <p className="mt-8 text-[11px] text-haze/70">
-            Best on a phone, but right at home here too. Keyboard only: type and
-            press Enter.
-          </p>
-        </aside>
-
-        {/* Film strip + phone column. */}
-        <div className="film-strip hidden w-5 md:block" aria-hidden />
-        <div className="relative flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-navy shadow-[0_0_60px_rgba(0,0,0,0.6)] md:my-6 md:h-[min(860px,calc(100dvh-3rem))] md:rounded-[1.75rem] md:border md:border-white/10 md:shadow-[0_0_80px_rgba(255,204,51,0.08)]">
-        <div className="flex min-h-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         {phase === "loading" && <Centered>Loading today's Cold Open…</Centered>}
 
         {phase === "error" && (
           <Centered>
-            <div className="text-carpet">Couldn't load the game.</div>
-            <div className="mt-2 text-xs text-haze">{error}</div>
+            <div className="font-pixel text-carpet">Couldn't load the game.</div>
+            <div className="mt-3 max-w-md text-sm text-haze">{error}</div>
             <div className="mt-2 text-xs text-haze">
-              Is the backend running on :8000?
+              Is the backend reachable?
             </div>
           </Centered>
         )}
 
         {phase === "intro" && daily && (
-          <Centered>
-            <h1 className="font-pixel text-2xl text-gold">COLD OPEN</h1>
-            <p className="mt-2 text-sm text-spotlight">#{daily.number}</p>
-            <p className="mt-4 max-w-[18rem] text-center text-sm text-haze">
-              {daily.prompt_count} prompts. {daily.seconds_per_prompt} seconds each.
-              The rarer your answer, the higher you climb.
-            </p>
-            <button
-              onClick={begin}
-              className="mt-6 rounded bg-gold px-6 py-3 font-pixel text-sm text-navy"
-            >
-              PLAY
-            </button>
-          </Centered>
+          <IntroScreen daily={daily} onPlay={begin} />
         )}
 
         {phase === "playing" && daily && run && (
@@ -156,12 +108,63 @@ export default function App() {
         )}
 
         {phase === "result" && run && (
-          <ResultScreen runId={run.run_id} runToken={run.run_token} />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <ResultScreen runId={run.run_id} runToken={run.run_token} />
+          </div>
         )}
+      </div>
+
+      <SiteFooter />
+    </div>
+  );
+}
+
+// Desktop-first intro: a wide marquee hero with the title, how-to, and PLAY.
+function IntroScreen({ daily, onPlay }: { daily: Daily; onPlay: () => void }) {
+  return (
+    <div className="flex min-h-0 flex-1 items-center justify-center p-6">
+      <div className="w-full max-w-4xl">
+        <div className="marquee-lights mx-auto mb-8 h-2 w-full max-w-2xl rounded" aria-hidden />
+        <div className="text-center">
+          <h1 className="font-pixel text-4xl leading-tight text-gold md:text-6xl">
+            COLD OPEN
+          </h1>
+          <p className="mt-4 text-sm text-haze md:text-base">
+            Daily #{daily.number} · {daily.date}
+          </p>
+          <p className="mx-auto mt-6 max-w-xl text-base text-spotlight/90 md:text-lg">
+            Everyone gets the same {daily.prompt_count} prompts. You've got{" "}
+            {daily.seconds_per_prompt} seconds each. The rarer your answer, the
+            higher your little star climbs the fame ladder.
+          </p>
         </div>
-        <SiteFooter />
+
+        <div className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-3">
+          {[
+            ["1", "Read the prompt", "Type one movie or show."],
+            ["2", "Rarer is better", "Obvious picks barely score; deep cuts launch you up."],
+            ["3", "Finish & share", "All 7 prompts, then a spoiler-free score card."],
+          ].map(([n, title, body]) => (
+            <div
+              key={n}
+              className="rounded-xl border border-white/10 bg-navy2/50 p-5 text-left"
+            >
+              <div className="font-pixel text-sm text-gold">{n}</div>
+              <div className="mt-2 font-medium text-spotlight">{title}</div>
+              <div className="mt-1 text-sm text-haze">{body}</div>
+            </div>
+          ))}
         </div>
-        <div className="film-strip hidden w-5 md:block" aria-hidden />
+
+        <div className="mt-10 text-center">
+          <button
+            onClick={onPlay}
+            className="rounded-lg bg-gold px-10 py-4 font-pixel text-base text-navy transition-transform hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-gold/60 active:scale-95"
+          >
+            PLAY
+          </button>
+        </div>
+        <div className="marquee-lights mx-auto mt-8 h-2 w-full max-w-2xl rounded" aria-hidden />
       </div>
     </div>
   );
@@ -211,7 +214,7 @@ async function forfeitInProgressPrompt(run: StartRun): Promise<StartRun> {
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center p-6 text-spotlight">
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-6 text-center text-spotlight">
       {children}
     </div>
   );

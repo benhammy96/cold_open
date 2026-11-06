@@ -107,3 +107,107 @@ canvas {
 .film-strip::after {
   right: 5px;
 }
+
+/* --- Full-width theater (desktop-first overhaul) --- */
+
+/* Stage: the central scene container. A subtle vignette + floor glow so the
+   enlarged pixel art reads as being ON a lit stage rather than floating. */
+.stage {
+  background:
+    radial-gradient(
+      70% 60% at 50% 38%,
+      rgba(255, 245, 214, 0.10) 0%,
+      rgba(255, 245, 214, 0) 60%
+    ),
+    radial-gradient(
+      120% 70% at 50% 108%,
+      rgba(193, 18, 31, 0.22) 0%,
+      rgba(13, 27, 42, 0) 60%
+    ),
+    linear-gradient(180deg, #0b1320 0%, #060a12 100%);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.6);
+}
+
+/* Horizontal film-strip divider (full-width edition of the vertical strip). */
+.film-strip-h {
+  background: repeating-linear-gradient(
+    to right,
+    transparent 0 14px,
+    rgba(0, 0, 0, 0.5) 14px 30px
+  );
+  position: relative;
+}
+.film-strip-h::before,
+.film-strip-h::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: repeating-linear-gradient(
+    to right,
+    #e0e1dd 0 9px,
+    transparent 9px 26px
+  );
+  opacity: 0.8;
+}
+.film-strip-h::before {
+  top: 4px;
+}
+.film-strip-h::after {
+  bottom: 4px;
+}
+
+/* Marquee bulb border: a row of warm bulbs that chase. Used along panel edges
+   and the top bar to fill space with purposeful theater detail. */
+.marquee-lights {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 204, 51, 0.95) 0 2px,
+    rgba(255, 204, 51, 0.12) 2px 3px,
+    transparent 3px
+  );
+  background-size: 18px 100%;
+  background-repeat: repeat-x;
+  background-position: 0 center;
+  animation: marquee-chase 1.2s steps(3) infinite;
+}
+@keyframes marquee-chase {
+  to {
+    background-position: 18px center;
+  }
+}
+
+/* Vertical bulb strip for panel sides. */
+.marquee-lights-v {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 204, 51, 0.95) 0 2px,
+    rgba(255, 204, 51, 0.12) 2px 3px,
+    transparent 3px
+  );
+  background-size: 100% 18px;
+  background-repeat: repeat-y;
+  animation: marquee-chase-v 1.2s steps(3) infinite;
+}
+@keyframes marquee-chase-v {
+  to {
+    background-position: center 18px;
+  }
+}
+
+/* The canvas should scale by its container but stay crisp. Enlarge crispness. */
+.stage canvas {
+  image-rendering: pixelated;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-lights,
+  .marquee-lights-v,
+  .theater-spot {
+    animation: none !important;
+  }
+}
